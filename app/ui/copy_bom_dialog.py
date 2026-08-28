@@ -215,12 +215,12 @@ class CopyBomDialog(ctk.CTkToplevel):
             code = t.current_code
             bom_tag = "BOM2" if ("2" in t.bom_type) else "BOM1"
 
-            if "Mã (Loại BOM)" in fmt:
-                formatted_items.append(f"{code} ({bom_tag})")
+            if "Mã (Loại BOM)" in fmt or "Mã(Loại BOM)" in fmt:
+                formatted_items.append(f"{code}({bom_tag})")
             elif "Chỉ Mã Số" in fmt:
                 formatted_items.append(code)
             elif "Chi Tiết" in fmt:
-                formatted_items.append(f"{t.original_name} -> {code} ({bom_tag})")
+                formatted_items.append(f"{t.original_name} -> {code}({bom_tag})")
 
         return formatted_items
 

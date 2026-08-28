@@ -274,10 +274,15 @@
                 <div class="control-group">
                     <label>Định Dạng:</label>
                     <select id="selModalFormat" class="custom-select">
-                        <option value="code_tag" selected>Mã (Loại BOM)  [VD: 8018991CTIK64-03 (BOM2)]</option>
-                        <option value="code_only">Chỉ Mã Số      [VD: 8018991CTIK64-03]</option>
-                        <option value="full">Chi Tiết File  [VD: file.pdf -> 8018991CTIK64-03 (BOM2)]</option>
+                        <option value="code_tag_compact" selected>Mã(Loại BOM)  [VD: 8018991CTIK64-03(BOM2)]</option>
+                        <option value="code_tag_space">Mã (Loại BOM) [VD: 8018991CTIK64-03 (BOM2)]</option>
+                        <option value="code_only">Chỉ Mã Số [VD: 8018991CTIK64-03]</option>
+                        <option value="full">Chi Tiết File [VD: file.pdf -> 8018991CTIK64-03(BOM2)]</option>
                     </select>
+                </div>
+
+                <div class="control-group">
+                    <label style="cursor: pointer; color: #a5b4fc;"><input type="checkbox" id="chkUniqueOnly" checked style="margin-right: 5px;"> Chỉ lấy mã duy nhất</label>
                 </div>
 
                 <div class="control-group">

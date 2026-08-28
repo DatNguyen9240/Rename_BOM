@@ -159,20 +159,20 @@ class FilenameExtractor:
 
         for i, char in enumerate(text):
             # Context-aware replacement: if surrounding characters are digits or code-like
-            prev_is_digit = (i > 0 and text[i - 1].isdigit())
-            next_is_digit = (i < len(text) - 1 and text[i + 1].isdigit())
-            surrounded_by_digits = prev_is_digit or next_is_digit or is_digit_heavy
+            prev_is_digit = (i > 0 and (text[i - 1].isdigit() or text[i - 1] in ('B', 'O', 'S')))
+            next_is_digit = (i < len(text) - 1 and (text[i + 1].isdigit() or text[i + 1] in ('B', 'O', 'S')))
+            surrounded_by_digits = prev_is_digit or next_is_digit or is_digit_heavy or (i < 4 and len(text) >= 8)
 
             if self.config.correct_o_to_zero and char in ('O', 'o') and surrounded_by_digits:
                 mod_chars.append('0')
                 changes.append(f"{char}→0")
-            elif self.config.correct_i_to_one and char in ('I', 'l', '|') and surrounded_by_digits:
+            elif self.config.correct_i_to_one and char in ('I', 'l', '|') and (surrounded_by_digits or (i > 0 and i < 3)):
                 mod_chars.append('1')
                 changes.append(f"{char}→1")
-            elif self.config.correct_s_to_five and char in ('S', 's') and surrounded_by_digits:
+            elif self.config.correct_s_to_five and char in ('S', 's') and (surrounded_by_digits or (i > 0 and text[i-1] in ('0', '8', 'B'))):
                 mod_chars.append('5')
                 changes.append(f"{char}→5")
-            elif self.config.correct_b_to_eight and char == 'B' and surrounded_by_digits:
+            elif self.config.correct_b_to_eight and char == 'B' and (surrounded_by_digits or i == 0):
                 mod_chars.append('8')
                 changes.append(f"{char}→8")
             elif self.config.correct_z_to_two and char in ('Z', 'z') and surrounded_by_digits:

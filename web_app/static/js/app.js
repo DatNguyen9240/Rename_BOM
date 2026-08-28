@@ -364,29 +364,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const chkUniqueOnly = document.getElementById('chkUniqueOnly');
+
     selModalFormat.addEventListener('change', updateModalPreview);
     selModalDelim.addEventListener('change', updateModalPreview);
+    if (chkUniqueOnly) {
+        chkUniqueOnly.addEventListener('change', updateModalPreview);
+    }
 
     function updateModalPreview() {
         const fmt = selModalFormat.value;
         const delimChoice = selModalDelim.value;
+        const isUniqueOnly = chkUniqueOnly ? chkUniqueOnly.checked : false;
 
         let validResults = scanResults.filter(r => r.code && r.code !== '---');
 
         if (activeModalFilter === 'bom1') {
-            validResults = validResults.filter(r => r.bom_type.includes('1') || r.bom_type.includes('BOM') && !r.bom_type.includes('2'));
+            validResults = validResults.filter(r => r.bom_type.includes('1') || (r.bom_type.includes('BOM') && !r.bom_type.includes('2')));
         } else if (activeModalFilter === 'bom2') {
             validResults = validResults.filter(r => r.bom_type.includes('2'));
         }
 
-        const formatted = validResults.map(r => {
+        const seenItems = new Set();
+        const formatted = [];
+
+        validResults.forEach(r => {
             const tag = r.bom_type.includes('2') ? 'BOM2' : 'BOM1';
-            if (fmt === 'code_tag') {
-                return `${r.code} (${tag})`;
+            let itemStr = '';
+
+            if (fmt === 'code_tag_compact') {
+                itemStr = `${r.code}(${tag})`;
+            } else if (fmt === 'code_tag_space') {
+                itemStr = `${r.code} (${tag})`;
             } else if (fmt === 'code_only') {
-                return r.code;
+                itemStr = r.code;
             } else {
-                return `${r.original_name} -> ${r.code} (${tag})`;
+                itemStr = `${r.original_name} -> ${r.code}(${tag})`;
+            }
+
+            if (isUniqueOnly) {
+                if (!seenItems.has(itemStr)) {
+                    seenItems.add(itemStr);
+                    formatted.push(itemStr);
+                }
+            } else {
+                formatted.push(itemStr);
             }
         });
 
@@ -395,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (delimChoice === 'semicolon') separator = '; ';
 
         txtModalOutput.value = formatted.join(separator);
-        modalMsg.innerText = `Đã lọc ${formatted.length} mục.`;
+        modalMsg.innerText = `Đã xuất ${formatted.length} mã.`;
     }
 
     btnModalCopy.addEventListener('click', () => {

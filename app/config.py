@@ -31,7 +31,7 @@ class AppConfig:
     correct_o_to_zero: bool = True       # 'O' / 'o' -> '0' when expecting digits
     correct_i_to_one: bool = True        # 'I' / 'l' / '|' -> '1' when expecting digits
     correct_s_to_five: bool = True       # 'S' / 's' -> '5' when expecting digits
-    correct_b_to_eight: bool = False     # 'B' -> '8'
+    correct_b_to_eight: bool = True      # 'B' -> '8' (VD: B0S -> 805)
     correct_z_to_two: bool = False       # 'Z' -> '2'
 
     # --- Image Preprocessing Settings ---
