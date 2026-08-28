@@ -117,6 +117,7 @@ class TestOCRComponents(unittest.TestCase):
                 original_filename="IMG_001.jpg",
                 detected_text="904Y10200001",
                 extracted_number="904Y10200001",
+                bom_type="BOM 1",
                 new_filename="904Y10200001.jpg",
                 confidence=0.98,
                 status="Đã đổi tên",
@@ -128,6 +129,25 @@ class TestOCRComponents(unittest.TestCase):
         self.assertTrue(os.path.exists(test_csv))
         if os.path.exists(test_csv):
             os.remove(test_csv)
+
+    def test_bom_classification(self):
+        extractor = FilenameExtractor(self.config)
+        
+        # Test BOM 2
+        ocr_bom2 = [
+            ([[0, 0], [10, 0], [10, 10], [0, 10]], "CHEN KAI PRECISION INDUSTRY CO., LTD", 0.99),
+            ([[0, 10], [10, 10], [10, 20], [0, 20]], "THONG TIN CO BAN VE SAN PHAM(BOM2)", 0.98),
+            ([[0, 20], [10, 20], [10, 30], [0, 30]], "产品(BOM2)基础资料", 0.98),
+        ]
+        self.assertEqual(extractor.detect_bom_type(ocr_bom2), "BOM 2")
+
+        # Test BOM 1
+        ocr_bom1 = [
+            ([[0, 0], [10, 0], [10, 10], [0, 10]], "CHEN KAI PRECISION INDUSTRY CO., LTD", 0.99),
+            ([[0, 10], [10, 10], [10, 20], [0, 20]], "THONG TIN CO BAN VE SAN PHAM(BOM)", 0.98),
+            ([[0, 20], [10, 20], [10, 30], [0, 30]], "产品(BOM)基础资料", 0.98),
+        ]
+        self.assertEqual(extractor.detect_bom_type(ocr_bom1), "BOM 1")
 
 
 if __name__ == "__main__":

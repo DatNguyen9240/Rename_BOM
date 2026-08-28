@@ -111,6 +111,7 @@ class RenameManager:
                     original_filename=task.original_name,
                     detected_text=all_text_str,
                     extracted_number=extracted_code,
+                    bom_type=task.bom_type,
                     new_filename=task.original_name,
                     confidence=confidence,
                     status=task.status.value,
@@ -127,6 +128,7 @@ class RenameManager:
                     original_filename=task.original_name,
                     detected_text=all_text_str,
                     extracted_number=extracted_code,
+                    bom_type=task.bom_type,
                     new_filename=task.new_filename,
                     confidence=confidence,
                     status="Đã đúng tên",
@@ -157,6 +159,7 @@ class RenameManager:
                         original_filename=task.original_name,
                         detected_text=all_text_str,
                         extracted_number=extracted_code,
+                        bom_type=task.bom_type,
                         new_filename=task.new_filename,
                         confidence=confidence,
                         status=ProcessStatus.RENAMED.value,
@@ -177,6 +180,7 @@ class RenameManager:
                     original_filename=task.original_name,
                     detected_text=all_text_str,
                     extracted_number=extracted_code,
+                    bom_type=task.bom_type,
                     new_filename=task.original_name,
                     confidence=confidence,
                     status=ProcessStatus.FAILED.value,
@@ -195,12 +199,13 @@ class RenameManager:
             os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
             fieldnames = [
                 "original_filename",
-                "detected_text",
+                "bom_type",
                 "extracted_number",
                 "new_filename",
                 "confidence",
                 "status",
                 "timestamp",
+                "detected_text",
                 "error_message",
             ]
 

@@ -74,7 +74,7 @@ class PreviewTable(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        columns = ("idx", "orig_name", "code", "new_name", "conf", "status", "cand_count")
+        columns = ("idx", "orig_name", "code", "bom_type", "new_name", "conf", "status", "cand_count")
 
         self.tree = ttk.Treeview(
             self,
@@ -88,18 +88,20 @@ class PreviewTable(ctk.CTkFrame):
         self.tree.heading("idx", text="#", anchor="center")
         self.tree.heading("orig_name", text="Tên File Gốc", anchor="w")
         self.tree.heading("code", text="Mã Nhận Diện", anchor="w")
+        self.tree.heading("bom_type", text="Loại BOM", anchor="center")
         self.tree.heading("new_name", text="Tên Mới Dự Kiến", anchor="w")
         self.tree.heading("conf", text="Độ Tin Cậy", anchor="center")
         self.tree.heading("status", text="Trạng Thái", anchor="w")
         self.tree.heading("cand_count", text="Số Ứng Viên", anchor="center")
 
         self.tree.column("idx", width=45, minwidth=35, anchor="center", stretch=False)
-        self.tree.column("orig_name", width=220, minwidth=150, anchor="w")
-        self.tree.column("code", width=180, minwidth=120, anchor="w")
-        self.tree.column("new_name", width=220, minwidth=150, anchor="w")
-        self.tree.column("conf", width=100, minwidth=80, anchor="center", stretch=False)
-        self.tree.column("status", width=180, minwidth=130, anchor="w")
-        self.tree.column("cand_count", width=95, minwidth=70, anchor="center", stretch=False)
+        self.tree.column("orig_name", width=200, minwidth=140, anchor="w")
+        self.tree.column("code", width=170, minwidth=120, anchor="w")
+        self.tree.column("bom_type", width=95, minwidth=75, anchor="center", stretch=False)
+        self.tree.column("new_name", width=200, minwidth=140, anchor="w")
+        self.tree.column("conf", width=90, minwidth=75, anchor="center", stretch=False)
+        self.tree.column("status", width=170, minwidth=120, anchor="w")
+        self.tree.column("cand_count", width=90, minwidth=70, anchor="center", stretch=False)
 
         # Scrollbars
         self.vsb = ctk.CTkScrollbar(self, orientation="vertical", command=self.tree.yview)
@@ -135,6 +137,7 @@ class PreviewTable(ctk.CTkFrame):
         for idx, task in enumerate(self.tasks, start=1):
             conf_str = f"{task.current_confidence:.1%}" if task.current_confidence > 0 else "-"
             cand_count_str = str(len(task.candidates)) if task.candidates else "0"
+            bom_str = task.bom_type if task.bom_type else "-"
 
             # Tag determination
             tag = "default"
@@ -158,6 +161,7 @@ class PreviewTable(ctk.CTkFrame):
                     idx,
                     task.original_name,
                     task.current_code or "---",
+                    bom_str,
                     task.new_filename or task.original_name,
                     conf_str,
                     task.status.value,
@@ -173,6 +177,7 @@ class PreviewTable(ctk.CTkFrame):
             if t.task_id == task.task_id:
                 conf_str = f"{task.current_confidence:.1%}" if task.current_confidence > 0 else "-"
                 cand_count_str = str(len(task.candidates)) if task.candidates else "0"
+                bom_str = task.bom_type if task.bom_type else "-"
 
                 tag = "default"
                 if task.status == ProcessStatus.SUCCESS:
@@ -191,9 +196,10 @@ class PreviewTable(ctk.CTkFrame):
                 self.tree.item(
                     item_id,
                     values=(
-                        self.tree.item(item_id, "values")[0],
+                        self.tasks.index(task) + 1,
                         task.original_name,
                         task.current_code or "---",
+                        bom_str,
                         task.new_filename or task.original_name,
                         conf_str,
                         task.status.value,

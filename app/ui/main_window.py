@@ -18,6 +18,7 @@ from app.filename_extractor import FilenameExtractor
 from app.rename_manager import RenameManager
 from app.ui.preview_table import PreviewTable
 from app.ui.settings_dialog import SettingsDialog
+from app.ui.copy_bom_dialog import CopyBomDialog
 
 
 class MainWindow(ctk.CTk):
@@ -209,6 +210,12 @@ class MainWindow(ctk.CTk):
         self.lbl_stats_total = self._create_badge(stats_frame, "Tổng: 0", "#334155")
         self.lbl_stats_total.pack(side="left", padx=4)
 
+        self.lbl_stats_bom1 = self._create_badge(stats_frame, "BOM 1: 0", "#0284c7")
+        self.lbl_stats_bom1.pack(side="left", padx=4)
+
+        self.lbl_stats_bom2 = self._create_badge(stats_frame, "BOM 2: 0", "#7c3aed")
+        self.lbl_stats_bom2.pack(side="left", padx=4)
+
         self.lbl_stats_success = self._create_badge(stats_frame, "Nhận diện: 0", "#065f46")
         self.lbl_stats_success.pack(side="left", padx=4)
 
@@ -314,22 +321,34 @@ class MainWindow(ctk.CTk):
             fg_color="#2563eb",
             hover_color="#1d4ed8",
             height=38,
-            width=210,
+            width=200,
             command=self._execute_rename,
         )
         self.btn_rename.grid(row=0, column=3, padx=5)
 
+        self.btn_copy_bom = ctk.CTkButton(
+            act_row,
+            text="📋 Sao Chép BOM",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            fg_color="#7c3aed",
+            hover_color="#6d28d9",
+            height=38,
+            width=140,
+            command=self._open_copy_bom_dialog,
+        )
+        self.btn_copy_bom.grid(row=0, column=4, padx=5)
+
         self.btn_csv = ctk.CTkButton(
             act_row,
-            text="📊 Xuất Báo Cáo CSV",
+            text="📊 Xuất CSV",
             font=ctk.CTkFont(family="Segoe UI", size=12),
             fg_color="#475569",
             hover_color="#334155",
             height=38,
-            width=150,
+            width=110,
             command=self._export_csv,
         )
-        self.btn_csv.grid(row=0, column=4, padx=5)
+        self.btn_csv.grid(row=0, column=5, padx=5)
 
         self.btn_clear = ctk.CTkButton(
             act_row,
@@ -341,7 +360,7 @@ class MainWindow(ctk.CTk):
             width=70,
             command=self._clear_all,
         )
-        self.btn_clear.grid(row=0, column=5, padx=(5, 0))
+        self.btn_clear.grid(row=0, column=6, padx=(5, 0))
 
     # --- Event Handlers & Core Methods ---
 
@@ -477,8 +496,12 @@ class MainWindow(ctk.CTk):
         success = sum(1 for t in self.tasks if t.is_successful)
         failed = sum(1 for t in self.tasks if t.status in [ProcessStatus.NO_CANDIDATE, ProcessStatus.FAILED])
         renamed = sum(1 for t in self.tasks if t.status == ProcessStatus.RENAMED)
+        bom1 = sum(1 for t in self.tasks if "1" in t.bom_type or "BOM 1" in t.bom_type)
+        bom2 = sum(1 for t in self.tasks if "2" in t.bom_type or "BOM 2" in t.bom_type)
 
         self.lbl_stats_total.configure(text=f"Tổng: {total}")
+        self.lbl_stats_bom1.configure(text=f"BOM 1: {bom1}")
+        self.lbl_stats_bom2.configure(text=f"BOM 2: {bom2}")
         self.lbl_stats_success.configure(text=f"Nhận diện: {success}")
         self.lbl_stats_failed.configure(text=f"Không tìm thấy: {failed}")
         self.lbl_stats_renamed.configure(text=f"Đã đổi tên: {renamed}")
@@ -558,9 +581,10 @@ class MainWindow(ctk.CTk):
                 ocr_results = ocr_engine.recognize(processed_img)
                 task.all_detected_text = [text for _, text, _ in ocr_results]
 
-                # 4. Extract candidates
+                # 4. Extract candidates & Classify BOM Type (BOM 1 / BOM 2)
                 candidates = extractor.extract_candidates(ocr_results)
                 task.candidates = candidates
+                task.bom_type = extractor.detect_bom_type(ocr_results)
 
                 if candidates:
                     task.selected_candidate_index = 0
@@ -640,11 +664,19 @@ class MainWindow(ctk.CTk):
         )
         self.lbl_status.configure(text=f"Đã đổi tên thành công {success} file.")
 
+    # --- BOM Copy & Export ---
+
+    def _open_copy_bom_dialog(self):
+        if not self.tasks:
+            messagebox.showinfo("Thông báo", "Chưa có danh sách file để sao chép.", parent=self)
+            return
+        CopyBomDialog(self, self.tasks)
+
     # --- CSV Export ---
 
     def _export_csv(self):
         if not self.tasks:
-            messagebox.showinfo("Thông báo", "Chưa có dữ liệu để xuất CSV.")
+            messagebox.showinfo("Thông báo", "Chưa có dữ liệu để xuất CSV.", parent=self)
             return
 
         default_name = f"ocr_rename_log_{time.strftime('%Y%m%d_%H%M%S')}.csv"
@@ -665,6 +697,7 @@ class MainWindow(ctk.CTk):
                     original_filename=t.original_name,
                     detected_text=" | ".join(t.all_detected_text),
                     extracted_number=t.current_code,
+                    bom_type=t.bom_type,
                     new_filename=t.new_filename or t.original_name,
                     confidence=t.current_confidence,
                     status=t.status.value,
@@ -673,13 +706,13 @@ class MainWindow(ctk.CTk):
             )
 
         if RenameManager.export_csv(records, file_path):
-            messagebox.showinfo("Thành công", f"Đã xuất báo cáo CSV thành công tại:\n{file_path}")
+            messagebox.showinfo("Thành công", f"Đã xuất báo cáo CSV thành công tại:\n{file_path}", parent=self)
         else:
-            messagebox.showerror("Lỗi", "Không thể xuất file CSV.")
+            messagebox.showerror("Lỗi", "Không thể xuất file CSV.", parent=self)
 
     def _clear_all(self):
         if self._is_processing:
-            messagebox.showwarning("Cảnh báo", "Tiến trình OCR đang chạy. Vui lòng dừng trước.")
+            messagebox.showwarning("Cảnh báo", "Tiến trình OCR đang chạy. Vui lòng dừng trước.", parent=self)
             return
 
         self.tasks.clear()

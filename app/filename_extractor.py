@@ -14,6 +14,31 @@ class FilenameExtractor:
     def __init__(self, config: AppConfig):
         self.config = config
 
+    def detect_bom_type(
+        self, ocr_results: List[Tuple[List[List[float]], str, float]]
+    ) -> str:
+        """
+        Classifies engineering document header into 'BOM 1' or 'BOM 2'.
+        Matches titles like:
+        - 'THÔNG TIN CƠ BẢN VỀ SẢN PHẨM(BOM2)' / '产品(BOM2)基础资料' -> BOM 2
+        - 'THÔNG TIN CƠ BẢN VỀ SẢN PHẨM(BOM)' / '产品(BOM)基础资料' -> BOM 1
+        """
+        if not ocr_results:
+            return ""
+
+        texts = [raw_text.upper().strip() for _, raw_text, _ in ocr_results if raw_text]
+        combined = " ".join(texts)
+
+        # 1. Check for BOM2 first (both English/Vietnamese and Chinese patterns)
+        if re.search(r"\(BOM\s*2\)|BOM\s*2|BOM2|（BOM2）", combined):
+            return "BOM 2"
+
+        # 2. Check for BOM1 / BOM standard
+        if re.search(r"\(BOM\s*1\)|BOM\s*1|BOM1|（BOM1）|\(BOM\)|（BOM）|\bBOM\b", combined):
+            return "BOM 1"
+
+        return ""
+
     def extract_candidates(
         self, ocr_results: List[Tuple[List[List[float]], str, float]]
     ) -> List[CandidateMatch]:

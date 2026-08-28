@@ -55,8 +55,8 @@ class ImageTask:
     selected_candidate_index: int = 0
     custom_code_override: Optional[str] = None
     new_filename: str = ""
-    new_file_path: str = ""
     all_detected_text: List[str] = field(default_factory=list)
+    bom_type: str = ""  # "BOM 1", "BOM 2", hoặc ""
     error_message: str = ""
 
     @property
@@ -92,20 +92,22 @@ class RenameRecord:
     original_filename: str
     detected_text: str
     extracted_number: str
-    new_filename: str
-    confidence: float
-    status: str
+    bom_type: str = ""
+    new_filename: str = ""
+    confidence: float = 0.0
+    status: str = ""
     timestamp: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     error_message: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "original_filename": self.original_filename,
-            "detected_text": self.detected_text,
+            "bom_type": self.bom_type,
             "extracted_number": self.extracted_number,
             "new_filename": self.new_filename,
             "confidence": f"{self.confidence:.2%}" if self.confidence > 0 else "N/A",
             "status": self.status,
             "timestamp": self.timestamp,
+            "detected_text": self.detected_text,
             "error_message": self.error_message
         }
