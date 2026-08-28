@@ -213,7 +213,7 @@ class CopyBomDialog(ctk.CTkToplevel):
         formatted_items = []
         for t in valid_tasks:
             code = t.current_code
-            bom_tag = t.bom_type.replace(" ", "") if t.bom_type else "BOM"
+            bom_tag = "BOM2" if ("2" in t.bom_type) else "BOM1"
 
             if "Mã (Loại BOM)" in fmt:
                 formatted_items.append(f"{code} ({bom_tag})")

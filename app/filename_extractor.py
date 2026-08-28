@@ -19,25 +19,25 @@ class FilenameExtractor:
     ) -> str:
         """
         Classifies engineering document header into 'BOM 1' or 'BOM 2'.
-        Matches titles like:
-        - 'THÔNG TIN CƠ BẢN VỀ SẢN PHẨM(BOM2)' / '产品(BOM2)基础资料' -> BOM 2
-        - 'THÔNG TIN CƠ BẢN VỀ SẢN PHẨM(BOM)' / '产品(BOM)基础资料' -> BOM 1
+        - If document specifies BOM2 / (BOM2) / 产品(BOM2) -> 'BOM 2'
+        - If document specifies BOM / (BOM) / BOM1 / 产品(BOM) -> 'BOM 1' (Mặc định nếu là BOM thì là BOM1)
         """
         if not ocr_results:
-            return ""
+            return "BOM 1"
 
         texts = [raw_text.upper().strip() for _, raw_text, _ in ocr_results if raw_text]
         combined = " ".join(texts)
 
-        # 1. Check for BOM2 first (both English/Vietnamese and Chinese patterns)
+        # 1. Kiểm tra BOM2 trước (BOM2, (BOM2), （BOM2）)
         if re.search(r"\(BOM\s*2\)|BOM\s*2|BOM2|（BOM2）", combined):
             return "BOM 2"
 
-        # 2. Check for BOM1 / BOM standard
-        if re.search(r"\(BOM\s*1\)|BOM\s*1|BOM1|（BOM1）|\(BOM\)|（BOM）|\bBOM\b", combined):
+        # 2. Nếu có chữ BOM hoặc (BOM) -> chắc chắn là BOM 1
+        if "BOM" in combined:
             return "BOM 1"
 
-        return ""
+        # Mặc định tài liệu kỹ thuật bản vẽ
+        return "BOM 1"
 
     def extract_candidates(
         self, ocr_results: List[Tuple[List[List[float]], str, float]]
