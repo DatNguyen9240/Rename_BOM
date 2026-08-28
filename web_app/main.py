@@ -293,15 +293,63 @@ async def download_renamed_zip(session_id: str):
 
 @app.get("/download/desktop-app")
 async def download_desktop_app():
-    """Serves the built standalone Windows .exe if available."""
-    exe_path = os.path.join(os.path.dirname(BASE_DIR), "dist", "AI_OCR_Rename_Tool.exe")
-    if os.path.exists(exe_path):
+    """Serves the built standalone Windows .exe or ZIP distribution if available."""
+    import shutil
+    dist_dir = os.path.join(os.path.dirname(BASE_DIR), "dist")
+    exe_folder = os.path.join(dist_dir, "AI_OCR_Image_Renamer")
+    exe_file = os.path.join(exe_folder, "AI_OCR_Image_Renamer.exe")
+    zip_path = os.path.join(dist_dir, "AI_OCR_Image_Renamer_Windows.zip")
+
+    # 1. Check if zipped bundle exists
+    if os.path.exists(zip_path):
         return FileResponse(
-            exe_path,
-            media_type="application/octet-stream",
-            filename="AI_OCR_Rename_Tool.exe",
+            zip_path,
+            media_type="application/zip",
+            filename="AI_OCR_Image_Renamer_Windows.zip",
         )
-    return JSONResponse(
-        status_code=404,
-        content={"message": "File .EXE đang được đóng gói trên máy chủ. Bạn có thể tự build bằng lệnh: python build_exe.py"},
-    )
+
+    # 2. Check if folder exists and zip it on the fly
+    if os.path.exists(exe_file):
+        try:
+            shutil.make_archive(zip_path.replace(".zip", ""), "zip", exe_folder)
+            return FileResponse(
+                zip_path,
+                media_type="application/zip",
+                filename="AI_OCR_Image_Renamer_Windows.zip",
+            )
+        except Exception:
+            return FileResponse(
+                exe_file,
+                media_type="application/octet-stream",
+                filename="AI_OCR_Image_Renamer.exe",
+            )
+
+    # 3. If running in Cloud container (Railway), return HTML download guidance
+    guide_html = """
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <title>Hướng Dẫn Tải Bản Cài Đặt Desktop</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Plus Jakarta Sans', sans-serif; background: #090d16; color: #f8fafc; text-align: center; padding: 60px 20px; }
+            .card { max-width: 600px; margin: 0 auto; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px; }
+            h1 { font-family: 'Outfit'; color: #818cf8; margin-bottom: 16px; }
+            p { color: #94a3b8; line-height: 1.6; margin-bottom: 24px; }
+            .code-box { background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; color: #38bdf8; font-family: Consolas, monospace; font-size: 15px; margin-bottom: 24px; text-align: left; }
+            .btn { display: inline-block; background: #6366f1; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>🚀 Bản Desktop Windows (.EXE)</h1>
+            <p>Để tạo file <strong>.exe</strong> chạy trực tiếp trên máy tính cá nhân của bạn, hãy mở PowerShell tại thư mục dự án và chạy lệnh:</p>
+            <div class="code-box">.\\venv\\Scripts\\python.exe build_exe.py</div>
+            <p>Sau khi đóng gói xong, ứng dụng <strong>AI_OCR_Image_Renamer.exe</strong> sẽ nằm trong thư mục <code>dist/</code> để bạn sử dụng offline!</p>
+            <a href="/" class="btn">⬅️ Quay Lại Trang Chủ</a>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=guide_html)
