@@ -557,11 +557,9 @@ class MainWindow(ctk.CTk):
             task.status = ProcessStatus.PROCESSING
             self.after(0, lambda t=task: self.table.update_task_row(t))
 
-            # Progress info
-            progress_ratio = (idx + 1) / float(total)
-            elapsed = max(0.1, time.time() - start_time)
-            fps = (idx + 1) / elapsed
-            status_text = f"Đang quét ({idx + 1}/{total}) - {task.original_name} ({fps:.1f} ảnh/giây)"
+            # Progress when starting current item
+            progress_ratio = idx / float(total)
+            status_text = f"Đang quét ({idx + 1}/{total}) - {task.original_name}..."
 
             self.after(0, lambda pr=progress_ratio, st=status_text: self._update_progress_ui(pr, st))
 
@@ -597,11 +595,23 @@ class MainWindow(ctk.CTk):
                 task.error_message = str(e)
                 print(f"[Worker] Error processing {task.original_name}: {e}")
 
-            # Update row in UI
-            self.after(0, lambda t=task: self.table.update_task_row(t))
+            # Progress when finished current item
+            finished_ratio = (idx + 1) / float(total)
+            finished_status = f"Đã quét ({idx + 1}/{total}) - {task.original_name}"
+            self.after(
+                0,
+                lambda pr=finished_ratio, st=finished_status, t=task: self._on_item_finished(pr, st, t),
+            )
 
         # Complete pass
         self.after(0, self._finish_ocr_scan)
+
+    def _on_item_finished(self, ratio: float, status_text: str, task: ImageTask):
+        self.progress_bar.set(ratio)
+        self.lbl_prog_percent.configure(text=f"{ratio:.0%}")
+        self.lbl_status.configure(text=status_text)
+        self.table.update_task_row(task)
+        self._update_stats()
 
     def _update_progress_ui(self, ratio: float, status_text: str):
         self.progress_bar.set(ratio)
@@ -615,6 +625,9 @@ class MainWindow(ctk.CTk):
         self.btn_stop.configure(state="disabled")
         self.btn_rename.configure(state="normal")
 
+        self.progress_bar.set(1.0)
+        self.lbl_prog_percent.configure(text="100%")
+
         # Compute preview filenames with conflict detection
         RenameManager.resolve_filename_conflicts(self.tasks, self.config)
         self.table.refresh()
@@ -623,7 +636,7 @@ class MainWindow(ctk.CTk):
         success_cnt = sum(1 for t in self.tasks if t.is_successful)
         total = len(self.tasks)
         self.lbl_status.configure(
-            text=f"Quét OCR hoàn tất! Nhận diện thành công {success_cnt}/{total} ảnh. Hãy kiểm tra trước khi bấm 'Đổi Tên'."
+            text=f"✅ Quét OCR hoàn tất! Nhận diện thành công {success_cnt}/{total} file. Hãy kiểm tra trước khi bấm 'Đổi Tên'."
         )
 
     # --- Renaming Execution ---
