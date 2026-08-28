@@ -386,6 +386,7 @@ async def download_renamed_zip(session_id: str):
 
     zip_buffer = io.BytesIO()
 
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         # 1. Add all renamed files
         for f in files:
             zip_file.writestr(f["new_filename"], f["file_bytes"])
