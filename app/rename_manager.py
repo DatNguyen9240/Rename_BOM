@@ -201,6 +201,7 @@ class RenameManager:
                 "original_filename",
                 "bom_type",
                 "extracted_number",
+                "ma_kem_loai_bom",
                 "new_filename",
                 "confidence",
                 "status",

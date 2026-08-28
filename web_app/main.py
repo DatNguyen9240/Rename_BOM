@@ -394,14 +394,27 @@ async def download_renamed_zip(session_id: str):
         # 2. Add CSV audit report with utf-8-sig
         import csv
         csv_buffer = io.StringIO()
-        fieldnames = ["original_filename", "bom_type", "extracted_number", "new_filename", "confidence", "status"]
+        fieldnames = [
+            "original_filename",
+            "bom_type",
+            "extracted_number",
+            "ma_kem_loai_bom",
+            "new_filename",
+            "confidence",
+            "status",
+        ]
         writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
         writer.writeheader()
         for f in files:
+            code = f["code"]
+            btype = f["bom_type"] or "BOM 1"
+            tag = "BOM2" if "2" in btype else "BOM1"
+            ma_bom = f"{code}({tag})" if code and code != "---" else ""
             writer.writerow({
                 "original_filename": f["original_name"],
-                "bom_type": f["bom_type"],
-                "extracted_number": f["code"],
+                "bom_type": btype,
+                "extracted_number": code,
+                "ma_kem_loai_bom": ma_bom,
                 "new_filename": f["new_filename"],
                 "confidence": f"{f['confidence']:.1%}",
                 "status": f["status"],

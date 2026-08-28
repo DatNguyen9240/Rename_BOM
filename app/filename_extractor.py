@@ -224,8 +224,21 @@ class FilenameExtractor:
         return score
 
     def _format_code(self, code: str) -> str:
-        """Applies prefix, suffix and casing format."""
+        """Applies prefix, suffix and casing format + drawing number prefix normalization."""
         formatted = code.strip()
+
+        # Deterministic correction for drawing numbers (B0S8991 -> 8058991, BOS8991 -> 8058991, 8OS8991 -> 8058991, B018991 -> 8018991)
+        if re.match(r"^[Bb][0Oo][Ss5]\d+", formatted):
+            formatted = "805" + formatted[3:]
+        elif re.match(r"^8[0Oo][Ss]\d+", formatted):
+            formatted = "805" + formatted[3:]
+        elif re.match(r"^[Bb][0Oo]\d+", formatted):
+            formatted = "80" + formatted[2:]
+        elif re.match(r"^8[0Oo]\d+", formatted):
+            formatted = "80" + formatted[2:]
+        elif re.match(r"^[Bb]\d{6,}", formatted):
+            formatted = "8" + formatted[1:]
+
         if self.config.case_format == "UPPER":
             formatted = formatted.upper()
         elif self.config.case_format == "LOWER":

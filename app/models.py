@@ -100,10 +100,13 @@ class RenameRecord:
     error_message: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
+        tag = "BOM2" if "2" in self.bom_type else "BOM1"
+        ma_bom = f"{self.extracted_number}({tag})" if self.extracted_number and self.extracted_number != "---" else ""
         return {
             "original_filename": self.original_filename,
             "bom_type": self.bom_type,
             "extracted_number": self.extracted_number,
+            "ma_kem_loai_bom": ma_bom,
             "new_filename": self.new_filename,
             "confidence": f"{self.confidence:.2%}" if self.confidence > 0 else "N/A",
             "status": self.status,
