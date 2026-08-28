@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeSuccess.innerHTML = `<i class="fa-solid fa-check"></i> Nhận diện: ${success}`;
     }
 
-    // --- AI OCR Batch Scanning Execution ---
+    // --- AI OCR Batch Scanning Execution (Real-time stream per file) ---
     btnScan.addEventListener('click', async () => {
         if (selectedFiles.length === 0) return;
 
@@ -187,67 +187,128 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDownloadZip.disabled = true;
 
         progressWrapper.classList.remove('hidden');
-        progressBar.style.width = '10%';
-        progressPercent.innerText = '10%';
-        progressStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên và phân tích OCR (${selectedFiles.length} tệp)...`;
+        progressBar.style.width = '0%';
+        progressPercent.innerText = '0%';
 
-        const formData = new FormData();
-        selectedFiles.forEach(file => {
-            formData.append('files', file);
-        });
-        formData.append('regex_pattern', txtRegex.value.trim());
-        formData.append('min_length', txtMinLen.value);
-        formData.append('max_length', txtMaxLen.value);
+        scanResults = [];
+        let bom1Count = 0;
+        let bom2Count = 0;
+        let successCount = 0;
+        let clientSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        currentSessionId = clientSessionId;
 
-        try {
-            progressBar.style.width = '45%';
-            progressPercent.innerText = '45%';
+        const totalFiles = selectedFiles.length;
 
-            const response = await fetch('/api/scan', {
-                method: 'POST',
-                body: formData,
-            });
+        for (let i = 0; i < totalFiles; i++) {
+            const file = selectedFiles[i];
+            const fileNum = i + 1;
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.detail || 'Lỗi xử lý OCR từ máy chủ.');
+            // Update UI status for current file
+            const currentRatio = Math.round((i / totalFiles) * 100);
+            progressBar.style.width = `${currentRatio}%`;
+            progressPercent.innerText = `${currentRatio}%`;
+            progressStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang quét (${fileNum}/${totalFiles}): <strong>${escapeHtml(file.name)}</strong>...`;
+
+            // Mark row as processing in table
+            const row = tableBody.children[i];
+            if (row) {
+                const statusCell = row.cells[6];
+                if (statusCell) {
+                    statusCell.innerHTML = `<span class="badge badge-blue"><i class="fa-solid fa-spinner fa-spin"></i> Đang quét...</span>`;
+                }
             }
 
-            const data = await response.json();
-            currentSessionId = data.session_id;
-            scanResults = data.results;
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('session_id', clientSessionId);
+            formData.append('regex_pattern', txtRegex.value.trim());
+            formData.append('min_length', txtMinLen.value);
+            formData.append('max_length', txtMaxLen.value);
 
-            progressBar.style.width = '100%';
-            progressPercent.innerText = '100%';
-            progressStatus.innerHTML = `✅ Quét OCR hoàn tất thành công!`;
+            try {
+                const response = await fetch('/api/scan-single', {
+                    method: 'POST',
+                    body: formData,
+                });
 
-            // Calculate stats
-            let bom1Count = 0;
-            let bom2Count = 0;
-            let successCount = 0;
+                if (!response.ok) {
+                    throw new Error('Lỗi máy chủ khi quét file');
+                }
 
-            scanResults.forEach(r => {
-                if (r.code && r.code !== '---') {
+                const res = await response.json();
+                if (res.session_id) currentSessionId = res.session_id;
+                scanResults.push(res);
+
+                // Update row in table immediately
+                if (row) {
+                    let statusBadge = '';
+                    if (res.status === 'Nhận diện thành công') {
+                        statusBadge = `<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Thành công</span>`;
+                    } else {
+                        statusBadge = `<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> ${escapeHtml(res.status)}</span>`;
+                    }
+
+                    let bomBadge = '-';
+                    if (res.bom_type.includes('2')) {
+                        bomBadge = `<span class="badge badge-purple">BOM 2</span>`;
+                    } else if (res.bom_type.includes('1') || res.bom_type.includes('BOM')) {
+                        bomBadge = `<span class="badge badge-blue">BOM 1</span>`;
+                    }
+
+                    const confColor = res.confidence >= 90 ? '#34d399' : (res.confidence >= 70 ? '#fbbf24' : '#94a3b8');
+
+                    row.cells[2].innerText = res.code;
+                    row.cells[2].style.color = '#38bdf8';
+                    row.cells[2].style.fontWeight = '700';
+
+                    row.cells[3].innerHTML = bomBadge;
+
+                    row.cells[4].innerText = res.new_filename;
+                    row.cells[4].style.color = '#34d399';
+                    row.cells[4].style.fontWeight = '600';
+
+                    row.cells[5].innerText = res.confidence > 0 ? `${res.confidence}%` : '-';
+                    row.cells[5].style.color = confColor;
+
+                    row.cells[6].innerHTML = statusBadge;
+                }
+
+                if (res.code && res.code !== '---') {
                     successCount++;
-                    if (r.bom_type.includes('2')) bom2Count++;
+                    if (res.bom_type.includes('2')) bom2Count++;
                     else bom1Count++;
                 }
-            });
 
-            updateStats(scanResults.length, bom1Count, bom2Count, successCount);
-            renderResultsTable(scanResults);
+            } catch (err) {
+                console.error(`Error scanning ${file.name}:`, err);
+                scanResults.push({
+                    original_name: file.name,
+                    code: '---',
+                    bom_type: 'Không rõ',
+                    new_filename: file.name,
+                    confidence: 0,
+                    status: 'Lỗi xử lý',
+                });
+                if (row && row.cells[6]) {
+                    row.cells[6].innerHTML = `<span class="badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi xử lý</span>`;
+                }
+            }
 
-            btnCopyBom.disabled = false;
-            btnDownloadZip.disabled = false;
-            btnClear.disabled = false;
-
-        } catch (error) {
-            console.error(error);
-            alert(`Lỗi: ${error.message}`);
-            progressStatus.innerHTML = `<span style="color: #ef4444;">❌ Lỗi: ${error.message}</span>`;
-            btnClear.disabled = false;
-            btnScan.disabled = false;
+            // Update stats badge and progress after each file
+            updateStats(totalFiles, bom1Count, bom2Count, successCount);
+            const finishedRatio = Math.round(((i + 1) / totalFiles) * 100);
+            progressBar.style.width = `${finishedRatio}%`;
+            progressPercent.innerText = `${finishedRatio}%`;
         }
+
+        // All files finished
+        progressBar.style.width = '100%';
+        progressPercent.innerText = '100%';
+        progressStatus.innerHTML = `✅ Quét OCR hoàn tất! Nhận diện thành công ${successCount}/${totalFiles} tệp.`;
+
+        btnCopyBom.disabled = false;
+        btnDownloadZip.disabled = false;
+        btnClear.disabled = false;
     });
 
     // --- ZIP Download ---

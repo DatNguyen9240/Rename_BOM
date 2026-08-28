@@ -27,7 +27,22 @@ from app.filename_extractor import FilenameExtractor
 from app.image_processor import ImageProcessor
 from app.rename_manager import RenameManager
 
-app = FastAPI(title="AI OCR BOM Document Renamer", version="2.0.0")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Warmup OCR Engine in background on container startup
+    try:
+        print("[Startup] Initializing PaddleOCR engine in background...")
+        engine = OCREngine.get_instance(lang="ch", use_angle_cls=True)
+        dummy_img = np.zeros((64, 64, 3), dtype=np.uint8)
+        engine.recognize(dummy_img)
+        print("[Startup] PaddleOCR engine ready.")
+    except Exception as e:
+        print(f"[Startup] Engine warmup notice: {e}")
+    yield
+
+app = FastAPI(title="AI OCR BOM Document Renamer", version="2.0.0", lifespan=lifespan)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -39,12 +54,12 @@ os.makedirs(TEMPLATES_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-# In-memory session cache for ZIP downloads: session_id -> { "files": [(new_name, file_bytes)], "records": [...] }
+# In-memory session cache for ZIP downloads: session_id -> { "files": [...], "used_names": set(), "created_at": float }
 SESSIONS = {}
 
 
 def process_uploaded_file_bytes(file_name: str, file_bytes: bytes, config: AppConfig):
-    """Processes in-memory file bytes, returns (img_matrix, original_name, ext)."""
+    """Processes in-memory file bytes, returns (img_matrix, ext)."""
     ext = os.path.splitext(file_name)[1].lower()
 
     if ext == ".pdf":
@@ -55,7 +70,8 @@ def process_uploaded_file_bytes(file_name: str, file_bytes: bytes, config: AppCo
                 if len(pdf) > 0:
                     page = pdf.get_page(0)
                     try:
-                        bmp = page.render(scale=1.5)
+                        # scale=1.1 provides optimal balance of OCR precision and low CPU latency
+                        bmp = page.render(scale=1.1)
                         pil_img = bmp.to_pil()
                         if pil_img.mode != "RGB":
                             pil_img = pil_img.convert("RGB")
@@ -106,9 +122,10 @@ async def serve_landing_page(request: Request):
     return HTMLResponse(content=content)
 
 
-@app.post("/api/scan")
-async def scan_files(
-    files: List[UploadFile] = File(...),
+@app.post("/api/scan-single")
+async def scan_single_file(
+    file: UploadFile = File(...),
+    session_id: str = Form(""),
     regex_pattern: str = Form(r"[0-9A-Za-z]{6,15}-[0-9]{2}"),
     min_length: int = Form(8),
     max_length: int = Form(25),
@@ -116,6 +133,116 @@ async def scan_files(
     suffix: str = Form(""),
     case_format: str = Form("AS_IS"),
 ):
+    """Processes a single file with PaddleOCR and streams result immediately."""
+    config = AppConfig()
+    config.regex_pattern = regex_pattern.strip() or r"[0-9A-Za-z]{6,15}-[0-9]{2}"
+    config.min_length = min_length
+    config.max_length = max_length
+    config.prefix = prefix
+    config.suffix = suffix
+    config.case_format = case_format
+
+    extractor = FilenameExtractor(config)
+    ocr_engine = OCREngine.get_instance(lang="ch", use_angle_cls=True)
+
+    if not session_id or session_id not in SESSIONS:
+        session_id = str(uuid.uuid4())
+        SESSIONS[session_id] = {
+            "files": [],
+            "used_names": set(),
+            "created_at": time.time(),
+        }
+
+    session_data = SESSIONS[session_id]
+    used_names = session_data["used_names"]
+
+    file_name = file.filename or "document"
+    file_bytes = await file.read()
+
+    bgr_img, ext = process_uploaded_file_bytes(file_name, file_bytes, config)
+
+    if bgr_img is None:
+        result = {
+            "session_id": session_id,
+            "original_name": file_name,
+            "code": "---",
+            "bom_type": "Không rõ",
+            "new_filename": file_name,
+            "confidence": 0.0,
+            "status": "Lỗi mở tệp",
+            "candidates_count": 0,
+        }
+        return JSONResponse(result)
+
+    try:
+        processed_img = ImageProcessor.preprocess_for_ocr(bgr_img, config)
+        ocr_res = ocr_engine.recognize(processed_img)
+        candidates = extractor.extract_candidates(ocr_res)
+        bom_type = extractor.detect_bom_type(ocr_res)
+
+        best_code = candidates[0].code if candidates else ""
+        conf = candidates[0].confidence if candidates else 0.0
+
+        if best_code:
+            base_name = f"{prefix}{best_code}{suffix}"
+            if case_format == "UPPER":
+                base_name = base_name.upper()
+            elif case_format == "LOWER":
+                base_name = base_name.lower()
+
+            target_name = f"{base_name}{ext}"
+            target_lower = target_name.lower()
+
+            if target_lower in used_names:
+                counter = 1
+                while True:
+                    cand_name = f"{base_name}_{counter}{ext}"
+                    if cand_name.lower() not in used_names:
+                        target_name = cand_name
+                        break
+                    counter += 1
+
+            used_names.add(target_name.lower())
+            status = "Nhận diện thành công"
+        else:
+            target_name = file_name
+            status = "Không tìm thấy mã"
+
+        result = {
+            "session_id": session_id,
+            "original_name": file_name,
+            "code": best_code or "---",
+            "bom_type": bom_type or "BOM 1",
+            "new_filename": target_name,
+            "confidence": round(conf * 100, 1),
+            "status": status,
+            "candidates_count": len(candidates),
+        }
+
+        session_data["files"].append({
+            "new_filename": target_name,
+            "original_name": file_name,
+            "code": best_code,
+            "bom_type": bom_type or "BOM 1",
+            "confidence": conf,
+            "status": status,
+            "file_bytes": file_bytes,
+        })
+
+        return JSONResponse(result)
+
+    except Exception as e:
+        print(f"[WebScan] Single error {file_name}: {e}")
+        return JSONResponse({
+            "session_id": session_id,
+            "original_name": file_name,
+            "code": "---",
+            "bom_type": "Không rõ",
+            "new_filename": file_name,
+            "confidence": 0.0,
+            "status": f"Lỗi OCR: {str(e)[:50]}",
+            "candidates_count": 0,
+        })
     """Runs PaddleOCR on batch uploaded files and extracts BOM codes."""
     if not files:
         raise HTTPException(status_code=400, detail="Không có tệp nào được tải lên.")
