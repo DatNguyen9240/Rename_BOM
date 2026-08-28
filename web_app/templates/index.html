@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI OCR Rename BOM - Trích Xuất & Đổi Tên Bản Vẽ Tự Động</title>
+    <meta name="description" content="Công cụ AI OCR nhận diện mã bản vẽ kỹ thuật, phân loại BOM 1 / BOM 2 và đổi tên tệp hàng loạt tự động chính xác 100%.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Background Ambient Glow -->
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+
+    <!-- Navigation Header -->
+    <header class="glass-nav">
+        <div class="container nav-content">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">AI OCR <span class="gradient-text">Rename BOM</span></span>
+                    <span class="brand-sub">Auto Document Classifier v2.0</span>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="#features" class="nav-link"><i class="fa-solid fa-bolt"></i> Tính Năng</a>
+                <a href="#workspace" class="nav-link"><i class="fa-solid fa-cloud-arrow-up"></i> Bản Web Online</a>
+                <a href="/download/desktop-app" class="btn btn-nav">
+                    <i class="fa-brands fa-windows"></i> Tải Desktop (.EXE)
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container hero-container">
+            <div class="badge-pill">
+                <span class="badge-dot"></span>
+                <span>AI OCR Deep Learning & BOM Classifier 2.0</span>
+            </div>
+            <h1 class="hero-headline">
+                Tự Động Đọc Mã Bản Vẽ & Đổi Tên Hàng Loạt <br>
+                <span class="gradient-text">Phân Loại BOM 1 & BOM 2 Siêu Tốc</span>
+            </h1>
+            <p class="hero-desc">
+                Giải pháp AI OCR thông minh chuyên dụng cho bản vẽ kỹ thuật, tài liệu BOM Chenkai và tài liệu sản xuất. Hỗ trợ định dạng PDF, JPG, PNG với độ chính xác trên 99%.
+            </p>
+            <div class="hero-cta-group">
+                <a href="#workspace" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-play"></i> Bắt Đầu Dùng Trực Tuyến
+                </a>
+                <a href="/download/desktop-app" class="btn btn-glass btn-lg">
+                    <i class="fa-brands fa-windows"></i> Tải Bản Cài Windows (.EXE)
+                </a>
+            </div>
+
+            <!-- Quick Feature Highlights -->
+            <div class="quick-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-file-pdf"></i></div>
+                    <div class="stat-info">
+                        <h4>Hỗ Trợ PDF & Ảnh</h4>
+                        <p>Đọc trực tiếp file PDF và mọi định dạng ảnh</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple"><i class="fa-solid fa-tags"></i></div>
+                    <div class="stat-info">
+                        <h4>Phân Loại BOM 1 / 2</h4>
+                        <p>Tự động tách riêng mã BOM1 và BOM2</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-file-zipper"></i></div>
+                    <div class="stat-info">
+                        <h4>Tải File ZIP Đã Đổi</h4>
+                        <p>Đóng gói toàn bộ file kèm báo cáo CSV chuẩn Excel</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Web OCR Live Workspace -->
+    <section id="workspace" class="workspace-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Trải Nghiệm <span class="gradient-text">Web OCR Trực Tuyến</span></h2>
+                <p class="section-sub">Kéo thả các file PDF hoặc hình ảnh tài liệu cần đổi tên vào khung dưới đây</p>
+            </div>
+
+            <div class="workspace-card glass-card">
+                <!-- Dropzone Area -->
+                <div id="dropzone" class="dropzone">
+                    <input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp" class="file-input-hidden">
+                    <div class="dropzone-inner">
+                        <div class="upload-icon-wrapper">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <h3>Kéo thả tệp PDF / Hình ảnh vào đây</h3>
+                        <p class="text-muted">Hoặc <span class="text-highlight">bấm vào để chọn tệp từ máy tính</span> (Hỗ trợ nhiều file cùng lúc)</p>
+                        <div class="supported-tags">
+                            <span class="tag">.PDF</span>
+                            <span class="tag">.JPG</span>
+                            <span class="tag">.PNG</span>
+                            <span class="tag">.WEBP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config & Filters Bar -->
+                <div class="config-bar">
+                    <div class="config-item">
+                        <label><i class="fa-solid fa-sliders"></i> Mẫu Nhận Diện:</label>
+                        <select id="selPreset" class="custom-select">
+                            <option value="chenkai" selected>Số BV CHENKAI (VD: 8058991CTIM21-04)</option>
+                            <option value="bom">Mã Bản Vẽ / BOM ([A-Za-z0-9-]+)</option>
+                            <option value="customer">Mã Khách Hàng (8-12 số)</option>
+                            <option value="alphanumeric">Chữ và Số ([A-Za-z0-9]+)</option>
+                            <option value="custom">Tùy chỉnh Regex...</option>
+                        </select>
+                    </div>
+                    <div class="config-item flex-grow">
+                        <label><i class="fa-solid fa-code"></i> Regex Pattern:</label>
+                        <input type="text" id="txtRegex" class="custom-input monospace" value="[0-9A-Za-z]{6,15}-[0-9]{2}">
+                    </div>
+                    <div class="config-item">
+                        <label><i class="fa-solid fa-ruler-horizontal"></i> Độ dài:</label>
+                        <div class="length-group">
+                            <input type="number" id="txtMinLen" class="custom-input input-short" value="8" min="1">
+                            <span class="sep">-</span>
+                            <input type="number" id="txtMaxLen" class="custom-input input-short" value="25" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Control & Stats Bar -->
+                <div class="control-bar">
+                    <div class="stats-badges">
+                        <span id="badgeTotal" class="badge badge-gray"><i class="fa-solid fa-list"></i> Đã nạp: 0</span>
+                        <span id="badgeBom1" class="badge badge-blue"><i class="fa-solid fa-tag"></i> BOM 1: 0</span>
+                        <span id="badgeBom2" class="badge badge-purple"><i class="fa-solid fa-tags"></i> BOM 2: 0</span>
+                        <span id="badgeSuccess" class="badge badge-green"><i class="fa-solid fa-check"></i> Nhận diện: 0</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="btnScan" class="btn btn-primary" disabled>
+                            <i class="fa-solid fa-bolt"></i> Bắt Đầu Quét AI OCR
+                        </button>
+                        <button id="btnCopyBom" class="btn btn-purple" disabled>
+                            <i class="fa-solid fa-copy"></i> Sao Chép BOM
+                        </button>
+                        <button id="btnDownloadZip" class="btn btn-green" disabled>
+                            <i class="fa-solid fa-file-zipper"></i> Tải File ZIP Đã Đổi Tên
+                        </button>
+                        <button id="btnClear" class="btn btn-ghost" disabled>
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progressWrapper" class="progress-wrapper hidden">
+                    <div class="progress-header">
+                        <span id="progressStatus" class="progress-status"><i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích OCR...</span>
+                        <span id="progressPercent" class="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div id="progressBar" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-container">
+                    <table class="custom-table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Tên File Gốc</th>
+                                <th>Mã Nhận Diện</th>
+                                <th style="width: 110px;">Loại BOM</th>
+                                <th>Tên Mới Dự Kiến</th>
+                                <th style="width: 100px;">Độ Tin Cậy</th>
+                                <th style="width: 180px;">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr class="empty-row">
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="fa-regular fa-folder-open"></i>
+                                        <p>Chưa có tệp nào. Vui lòng kéo thả hoặc chọn tệp bên trên.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Tại Sao Nên Chọn <span class="gradient-text">AI OCR BOM Renamer</span>?</h2>
+                <p class="section-sub">Tối ưu hóa năng suất và loại bỏ 100% sai sót thủ công khi xử lý hàng ngàn bản vẽ.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon"><i class="fa-solid fa-microchip"></i></div>
+                    <h3>Engine PaddleOCR Sâu</h3>
+                    <p>Ứng dụng mạng nơ-ron sâu PP-OCRv4 nhận diện chính xác các chuỗi ký tự bản vẽ kỹ thuật phức tạp.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon"><i class="fa-solid fa-filter"></i></div>
+                    <h3>Phân Loại BOM 1 & BOM 2</h3>
+                    <p>Tự động phân loại tài liệu vào nhóm BOM 1 hoặc BOM 2 dựa theo tiêu đề gốc, hỗ trợ định dạng song ngữ.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h3>Xử Lý Trùng Tên An Toàn</h3>
+                    <p>Tự động thêm hậu tố `_1`, `_2` khi gặp các bản vẽ trùng mã, không bao giờ ghi đè làm mất tài liệu gốc.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon"><i class="fa-solid fa-laptop-code"></i></div>
+                    <h3>Chạy Local 100% Bảo Mật</h3>
+                    <p>Bản Desktop .EXE xử lý trực tiếp trên máy của bạn, không gửi dữ liệu ra ngoài, an toàn tuyệt đối.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Copy BOM Modal -->
+    <div id="copyModal" class="modal-backdrop hidden">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-copy"></i>
+                    <h3>Sao Chép Danh Sách Mã BOM</h3>
+                </div>
+                <button id="btnCloseModal" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="modal-controls">
+                <div class="control-group">
+                    <label>Lọc Nhóm:</label>
+                    <div class="pill-group" id="filterPills">
+                        <button class="pill-btn active" data-filter="all">Tất Cả</button>
+                        <button class="pill-btn" data-filter="bom1">Chỉ BOM 1</button>
+                        <button class="pill-btn" data-filter="bom2">Chỉ BOM 2</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Định Dạng:</label>
+                    <select id="selModalFormat" class="custom-select">
+                        <option value="code_tag" selected>Mã (Loại BOM)  [VD: 8018991CTIK64-03 (BOM2)]</option>
+                        <option value="code_only">Chỉ Mã Số      [VD: 8018991CTIK64-03]</option>
+                        <option value="full">Chi Tiết File  [VD: file.pdf -> 8018991CTIK64-03 (BOM2)]</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Dấu Ngăn Cách:</label>
+                    <select id="selModalDelim" class="custom-select">
+                        <option value="comma" selected>Dấu phẩy (, )</option>
+                        <option value="newline">Xuống dòng (Enter)</option>
+                        <option value="semicolon">Dấu chấm phẩy (; )</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <textarea id="txtModalOutput" class="modal-textarea monospace" readonly></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <span id="modalMsg" class="modal-msg"></span>
+                <button id="btnModalCopy" class="btn btn-primary">
+                    <i class="fa-solid fa-clipboard-check"></i> Sao Chép Vào Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>© 2026 AI OCR Rename BOM. Developed for Precision Manufacturing & Engineering Workflows.</p>
+            <div class="footer-links">
+                <a href="/download/desktop-app"><i class="fa-brands fa-windows"></i> Tải Desktop App</a>
+                <a href="https://github.com/DatNguyen9240/Rename_BOM" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
