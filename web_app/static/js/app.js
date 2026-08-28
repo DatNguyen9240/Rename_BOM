@@ -22,9 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const badgeSuccess = document.getElementById('badgeSuccess');
 
     const btnScan = document.getElementById('btnScan');
+    const btnStop = document.getElementById('btnStop');
     const btnCopyBom = document.getElementById('btnCopyBom');
     const btnDownloadZip = document.getElementById('btnDownloadZip');
     const btnClear = document.getElementById('btnClear');
+
+    let isStopRequested = false;
 
     const progressWrapper = document.getElementById('progressWrapper');
     const progressBar = document.getElementById('progressBar');
@@ -181,10 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnScan.addEventListener('click', async () => {
         if (selectedFiles.length === 0) return;
 
+        isStopRequested = false;
         btnScan.disabled = true;
+        btnStop.disabled = false;
         btnClear.disabled = true;
         btnCopyBom.disabled = true;
         btnDownloadZip.disabled = true;
+        if (btnQuickCopy) btnQuickCopy.disabled = true;
 
         progressWrapper.classList.remove('hidden');
         progressBar.style.width = '0%';
@@ -200,6 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalFiles = selectedFiles.length;
 
         for (let i = 0; i < totalFiles; i++) {
+            if (isStopRequested) {
+                progressStatus.innerHTML = `<span style="color: #fbbf24;"><i class="fa-solid fa-circle-pause"></i> Đã dừng quét theo yêu cầu (${i}/${totalFiles} tệp).</span>`;
+                break;
+            }
+
             const file = selectedFiles[i];
             const fileNum = i + 1;
 
@@ -301,10 +312,16 @@ document.addEventListener('DOMContentLoaded', () => {
             progressPercent.innerText = `${finishedRatio}%`;
         }
 
-        // All files finished
-        progressBar.style.width = '100%';
-        progressPercent.innerText = '100%';
-        progressStatus.innerHTML = `✅ Quét OCR hoàn tất! Nhận diện thành công ${successCount}/${totalFiles} tệp.`;
+        // Processing finished (either 100% or stopped)
+        btnStop.disabled = true;
+        btnScan.disabled = false;
+        btnClear.disabled = false;
+
+        if (!isStopRequested) {
+            progressBar.style.width = '100%';
+            progressPercent.innerText = '100%';
+            progressStatus.innerHTML = `✅ Quét OCR hoàn tất! Nhận diện thành công ${successCount}/${totalFiles} tệp.`;
+        }
 
         // Generate clean BOM code string for all scanned items
         const cleanCodes = scanResults
@@ -316,19 +333,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const quickBox = document.getElementById('quickResultBox');
         const quickText = document.getElementById('quickResultText');
-        const btnQuickCopy = document.getElementById('btnQuickCopy');
-        const btnCopyQuickResult = document.getElementById('btnCopyQuickResult');
 
         if (quickBox && quickText && cleanCodes.length > 0) {
             quickText.value = cleanCodes.join(', ');
             quickBox.classList.remove('hidden');
         }
 
-        if (btnQuickCopy) btnQuickCopy.disabled = false;
-        btnCopyBom.disabled = false;
-        btnDownloadZip.disabled = false;
-        btnClear.disabled = false;
+        if (cleanCodes.length > 0) {
+            if (btnQuickCopy) btnQuickCopy.disabled = false;
+            btnCopyBom.disabled = false;
+            btnDownloadZip.disabled = false;
+        }
     });
+
+    // --- Stop Button Handler ---
+    if (btnStop) {
+        btnStop.addEventListener('click', () => {
+            isStopRequested = true;
+            btnStop.disabled = true;
+            progressStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang dừng tiến trình quét...`;
+        });
+    }
 
     // --- Direct Quick Copy Handlers ---
     const btnQuickCopy = document.getElementById('btnQuickCopy');
