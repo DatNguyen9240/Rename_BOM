@@ -70,8 +70,8 @@ def process_uploaded_file_bytes(file_name: str, file_bytes: bytes, config: AppCo
                 if len(pdf) > 0:
                     page = pdf.get_page(0)
                     try:
-                        # scale=1.1 provides optimal balance of OCR precision and low CPU latency
-                        bmp = page.render(scale=1.1)
+                        # scale=1.3 provides optimal sharpness for OCR with fast inference
+                        bmp = page.render(scale=1.3)
                         pil_img = bmp.to_pil()
                         if pil_img.mode != "RGB":
                             pil_img = pil_img.convert("RGB")
@@ -145,8 +145,9 @@ async def scan_single_file(
     extractor = FilenameExtractor(config)
     ocr_engine = OCREngine.get_instance(lang="ch", use_angle_cls=True)
 
-    if not session_id or session_id not in SESSIONS:
+    if not session_id:
         session_id = str(uuid.uuid4())
+    if session_id not in SESSIONS:
         SESSIONS[session_id] = {
             "files": [],
             "used_names": set(),
