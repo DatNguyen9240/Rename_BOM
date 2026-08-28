@@ -386,41 +386,25 @@ async def download_renamed_zip(session_id: str):
 
     zip_buffer = io.BytesIO()
 
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         # 1. Add all renamed files
         for f in files:
             zip_file.writestr(f["new_filename"], f["file_bytes"])
 
-        # 2. Add CSV audit report with utf-8-sig
-        import csv
-        csv_buffer = io.StringIO()
-        fieldnames = [
-            "original_filename",
-            "bom_type",
-            "extracted_number",
-            "ma_kem_loai_bom",
-            "new_filename",
-            "confidence",
-            "status",
-        ]
-        writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
-        writer.writeheader()
+        # 2. Add clean danh_sach_ma_bom.txt (Chỉ chứa danh sách mã)
+        code_lines = []
         for f in files:
             code = f["code"]
             btype = f["bom_type"] or "BOM 1"
             tag = "BOM2" if "2" in btype else "BOM1"
             ma_bom = f"{code}({tag})" if code and code != "---" else ""
-            writer.writerow({
-                "original_filename": f["original_name"],
-                "bom_type": btype,
-                "extracted_number": code,
-                "ma_kem_loai_bom": ma_bom,
-                "new_filename": f["new_filename"],
-                "confidence": f"{f['confidence']:.1%}",
-                "status": f["status"],
-            })
+            if ma_bom:
+                code_lines.append(ma_bom)
 
-        zip_file.writestr("bao_cao_doi_ten.csv", ("\ufeff" + csv_buffer.getvalue()).encode("utf-8"))
+        zip_file.writestr("danh_sach_ma_bom.txt", ("\n".join(code_lines) + "\n").encode("utf-8"))
+
+        # 3. Add clean CSV containing ONLY Mã BOM
+        csv_content = "Mã BOM\n" + "\n".join(code_lines) + "\n"
+        zip_file.writestr("danh_sach_ma_bom.csv", ("\ufeff" + csv_content).encode("utf-8"))
 
     zip_buffer.seek(0)
     zip_filename = f"BOM_Renamed_Files_{time.strftime('%Y%m%d_%H%M%S')}.zip"

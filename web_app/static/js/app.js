@@ -130,10 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="color: #64748b; text-align: center;">${index + 1}</td>
                 <td><strong>${escapeHtml(file.name)}</strong></td>
                 <td style="color: #94a3b8;">---</td>
-                <td style="text-align: center;"><span class="tag">-</span></td>
                 <td style="color: #94a3b8;">${escapeHtml(file.name)}</td>
-                <td style="text-align: center;">-</td>
-                <td><span class="badge badge-gray"><i class="fa-solid fa-hourglass-start"></i> Sẵn sàng</span></td>
+                <td style="text-align: center;"><span class="badge badge-gray"><i class="fa-solid fa-hourglass-start"></i> Sẵn sàng</span></td>
             `;
             tableBody.appendChild(tr);
         });
@@ -151,23 +149,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusBadge = `<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> ${escapeHtml(r.status)}</span>`;
             }
 
-            let bomBadge = '-';
-            if (r.bom_type.includes('2')) {
-                bomBadge = `<span class="badge badge-purple">BOM 2</span>`;
-            } else if (r.bom_type.includes('1') || r.bom_type.includes('BOM')) {
-                bomBadge = `<span class="badge badge-blue">BOM 1</span>`;
-            }
-
-            const confColor = r.confidence >= 90 ? '#34d399' : (r.confidence >= 70 ? '#fbbf24' : '#94a3b8');
+            const tag = r.bom_type.includes('2') ? 'BOM2' : 'BOM1';
+            const codeWithBom = r.code && r.code !== '---' ? `${r.code}(${tag})` : '---';
 
             tr.innerHTML = `
                 <td style="color: #64748b; text-align: center;">${index + 1}</td>
                 <td>${escapeHtml(r.original_name)}</td>
-                <td class="monospace" style="color: #38bdf8; font-weight: 700;">${escapeHtml(r.code)}</td>
-                <td style="text-align: center;">${bomBadge}</td>
+                <td class="monospace" style="color: #38bdf8; font-weight: 700;">${escapeHtml(codeWithBom)}</td>
                 <td class="monospace" style="color: #34d399; font-weight: 600;">${escapeHtml(r.new_filename)}</td>
-                <td style="text-align: center; color: ${confColor}; font-weight: 600;">${r.confidence > 0 ? r.confidence + '%' : '-'}</td>
-                <td>${statusBadge}</td>
+                <td style="text-align: center;">${statusBadge}</td>
             `;
             tableBody.appendChild(tr);
         });
@@ -223,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Mark row as processing in table
             const row = tableBody.children[i];
             if (row) {
-                const statusCell = row.cells[6];
+                const statusCell = row.cells[4];
                 if (statusCell) {
                     statusCell.innerHTML = `<span class="badge badge-blue"><i class="fa-solid fa-spinner fa-spin"></i> Đang quét...</span>`;
                 }
@@ -259,29 +249,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         statusBadge = `<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> ${escapeHtml(res.status)}</span>`;
                     }
 
-                    let bomBadge = '-';
-                    if (res.bom_type.includes('2')) {
-                        bomBadge = `<span class="badge badge-purple">BOM 2</span>`;
-                    } else if (res.bom_type.includes('1') || res.bom_type.includes('BOM')) {
-                        bomBadge = `<span class="badge badge-blue">BOM 1</span>`;
-                    }
+                    const tag = res.bom_type.includes('2') ? 'BOM2' : 'BOM1';
+                    const codeWithBom = res.code && res.code !== '---' ? `${res.code}(${tag})` : '---';
 
-                    const confColor = res.confidence >= 90 ? '#34d399' : (res.confidence >= 70 ? '#fbbf24' : '#94a3b8');
-
-                    row.cells[2].innerText = res.code;
+                    row.cells[2].innerText = codeWithBom;
                     row.cells[2].style.color = '#38bdf8';
                     row.cells[2].style.fontWeight = '700';
 
-                    row.cells[3].innerHTML = bomBadge;
+                    row.cells[3].innerText = res.new_filename;
+                    row.cells[3].style.color = '#34d399';
+                    row.cells[3].style.fontWeight = '600';
 
-                    row.cells[4].innerText = res.new_filename;
-                    row.cells[4].style.color = '#34d399';
-                    row.cells[4].style.fontWeight = '600';
-
-                    row.cells[5].innerText = res.confidence > 0 ? `${res.confidence}%` : '-';
-                    row.cells[5].style.color = confColor;
-
-                    row.cells[6].innerHTML = statusBadge;
+                    row.cells[4].innerHTML = statusBadge;
                 }
 
                 if (res.code && res.code !== '---') {
@@ -300,8 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     confidence: 0,
                     status: 'Lỗi xử lý',
                 });
-                if (row && row.cells[6]) {
-                    row.cells[6].innerHTML = `<span class="badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi xử lý</span>`;
+                if (row && row.cells[4]) {
+                    row.cells[4].innerHTML = `<span class="badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi xử lý</span>`;
                 }
             }
 
