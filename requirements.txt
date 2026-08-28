@@ -1,14 +1,14 @@
 # Core OCR and Processing
 paddleocr>=2.7.0
-paddlepaddle>=2.5.2
+paddlepaddle>=2.6.0
 pypdfium2>=4.30.0
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
 Pillow>=10.0.0
-numpy>=1.24.0
+numpy>=1.24.0,<2.0.0
 pandas>=2.0.0
 
-# Desktop GUI (Local Desktop Execution)
-customtkinter>=5.2.0
+# Desktop GUI (Fallback for local execution if installed)
+customtkinter>=5.2.0; platform_system=="Windows"
 
 # Web Application & Cloud API (Railway Deployment)
 fastapi>=0.110.0
@@ -16,6 +16,5 @@ uvicorn>=0.28.0
 python-multipart>=0.0.9
 jinja2>=3.1.3
 
-# Build & Packaging
-pyinstaller>=6.0.0
+# Packaging
 packaging>=23.0

@@ -1,4 +1,4 @@
-# Use Python 3.10 slim for PaddleOCR compatibility on Linux
+# Use Python 3.10 slim for PaddleOCR compatibility on Linux Debian Bookworm
 FROM python:3.10-slim
 
 # Prevent Python from writing .pyc and buffering stdout
@@ -8,15 +8,18 @@ ENV PORT=8000
 
 # Install required system dependencies for OpenCV and PaddleOCR on Linux
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    build-essential \
+    libgl1 \
     libglib2.0-0 \
     libgomp1 \
-    libgthread-2.0-0 \
     fontconfig \
     libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# Upgrade pip, setuptools and wheel
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install Python dependencies
 COPY requirements.txt .
