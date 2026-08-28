@@ -89,6 +89,14 @@ def process_uploaded_file_bytes(file_name: str, file_bytes: bytes, config: AppCo
             return None, ext
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def get_favicon():
+    favicon_path = os.path.join(STATIC_DIR, "favicon.svg")
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path, media_type="image/svg+xml")
+    return HTMLResponse("", status_code=204)
+
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_landing_page(request: Request):
     """Renders the modern landing page and online web tool."""
