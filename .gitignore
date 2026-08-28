@@ -1,0 +1,25 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# PyInstaller Build Artifacts
+build/
+dist/
+*.spec
+
+# Logs & Configs
+*.log
+config.json
+
+# PaddleOCR & Model caches
+.paddlex/
+.paddleocr/
+output/
