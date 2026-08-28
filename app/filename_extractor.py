@@ -56,6 +56,10 @@ class FilenameExtractor:
                 continue
 
             cleaned_text = raw_text.strip()
+            # Normalize all Unicode dash/hyphen variants to standard ASCII '-'
+            cleaned_text = re.sub(r"[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uff0d]", "-", cleaned_text)
+            # Remove redundant internal spaces around hyphens: 'CTIM21 - 04' -> 'CTIM21-04'
+            cleaned_text = re.sub(r"\s*-\s*", "-", cleaned_text)
 
             # 1. Try finding candidates in the raw text directly
             matches = self._find_matches_in_text(cleaned_text, compiled_regex)
