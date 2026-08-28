@@ -825,7 +825,46 @@ h1, h2, h3, h4, .brand-title, .section-title {
     color: var(--text-muted);
     text-decoration: none;
 }
-.footer-links a:hover { color: #fff; }
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+}
+
+/* Quick Result Box */
+.quick-result-box {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.quick-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.quick-result-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #c084fc;
+}
+
+.quick-result-content {
+    width: 100%;
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    color: #38bdf8;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    outline: none;
+    resize: vertical;
+}
 
 .hidden { display: none !important; }
 

@@ -306,10 +306,56 @@ document.addEventListener('DOMContentLoaded', () => {
         progressPercent.innerText = '100%';
         progressStatus.innerHTML = `✅ Quét OCR hoàn tất! Nhận diện thành công ${successCount}/${totalFiles} tệp.`;
 
+        // Generate clean BOM code string for all scanned items
+        const cleanCodes = scanResults
+            .filter(r => r.code && r.code !== '---')
+            .map(r => {
+                const tag = r.bom_type.includes('2') ? 'BOM2' : 'BOM1';
+                return `${r.code}(${tag})`;
+            });
+
+        const quickBox = document.getElementById('quickResultBox');
+        const quickText = document.getElementById('quickResultText');
+        const btnQuickCopy = document.getElementById('btnQuickCopy');
+        const btnCopyQuickResult = document.getElementById('btnCopyQuickResult');
+
+        if (quickBox && quickText && cleanCodes.length > 0) {
+            quickText.value = cleanCodes.join(', ');
+            quickBox.classList.remove('hidden');
+        }
+
+        if (btnQuickCopy) btnQuickCopy.disabled = false;
         btnCopyBom.disabled = false;
         btnDownloadZip.disabled = false;
         btnClear.disabled = false;
     });
+
+    // --- Direct Quick Copy Handlers ---
+    const btnQuickCopy = document.getElementById('btnQuickCopy');
+    const btnCopyQuickResult = document.getElementById('btnCopyQuickResult');
+    const quickText = document.getElementById('quickResultText');
+
+    function performQuickCopy(btnElement) {
+        if (!quickText || !quickText.value.trim()) return;
+        navigator.clipboard.writeText(quickText.value.trim()).then(() => {
+            const originalHTML = btnElement.innerHTML;
+            btnElement.innerHTML = `<i class="fa-solid fa-check"></i> ✅ Đã Copy Mã!`;
+            setTimeout(() => {
+                btnElement.innerHTML = originalHTML;
+            }, 2500);
+        }).catch(() => {
+            quickText.select();
+            document.execCommand('copy');
+            alert('Đã copy chuỗi mã vào bộ nhớ tạm!');
+        });
+    }
+
+    if (btnQuickCopy) {
+        btnQuickCopy.addEventListener('click', () => performQuickCopy(btnQuickCopy));
+    }
+    if (btnCopyQuickResult) {
+        btnCopyQuickResult.addEventListener('click', () => performQuickCopy(btnCopyQuickResult));
+    }
 
     // --- ZIP Download ---
     btnDownloadZip.addEventListener('click', () => {
@@ -326,6 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateStats(0, 0, 0, 0);
         progressWrapper.classList.add('hidden');
+        const quickBox = document.getElementById('quickResultBox');
+        if (quickBox) quickBox.classList.add('hidden');
         progressBar.style.width = '0%';
         progressPercent.innerText = '0%';
 
@@ -340,6 +388,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>
         `;
 
+        const btnQuickCopy = document.getElementById('btnQuickCopy');
+        if (btnQuickCopy) btnQuickCopy.disabled = true;
         btnScan.disabled = true;
         btnCopyBom.disabled = true;
         btnDownloadZip.disabled = true;

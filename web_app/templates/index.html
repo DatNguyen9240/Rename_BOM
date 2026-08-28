@@ -164,16 +164,30 @@
                         <button id="btnScan" class="btn btn-primary" disabled>
                             <i class="fa-solid fa-bolt"></i> Bắt Đầu Quét AI OCR
                         </button>
-                        <button id="btnCopyBom" class="btn btn-purple" disabled>
-                            <i class="fa-solid fa-copy"></i> Sao Chép BOM
+                        <button id="btnQuickCopy" class="btn btn-purple" disabled>
+                            <i class="fa-solid fa-copy"></i> 📋 Sao Chép Toàn Bộ Mã
+                        </button>
+                        <button id="btnCopyBom" class="btn btn-glass" disabled>
+                            <i class="fa-solid fa-sliders"></i> Tùy Chỉnh
                         </button>
                         <button id="btnDownloadZip" class="btn btn-green" disabled>
-                            <i class="fa-solid fa-file-zipper"></i> Tải File ZIP Đã Đổi Tên
+                            <i class="fa-solid fa-file-zipper"></i> Tải File ZIP
                         </button>
                         <button id="btnClear" class="btn btn-ghost" disabled>
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
+                </div>
+
+                <!-- Quick Code Result Box (Displaying clean codes with BOM tags) -->
+                <div id="quickResultBox" class="quick-result-box hidden">
+                    <div class="quick-result-header">
+                        <span class="quick-result-title"><i class="fa-solid fa-code"></i> Danh Sách Mã BOM Trích Xuất:</span>
+                        <button id="btnCopyQuickResult" class="btn btn-sm btn-purple">
+                            <i class="fa-solid fa-clipboard-check"></i> Copy Chuỗi Mã Này
+                        </button>
+                    </div>
+                    <textarea id="quickResultText" class="quick-result-content monospace" readonly rows="3"></textarea>
                 </div>
 
                 <!-- Progress Bar -->
