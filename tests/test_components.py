@@ -149,6 +149,44 @@ class TestOCRComponents(unittest.TestCase):
         ]
         self.assertEqual(extractor.detect_bom_type(ocr_bom1), "BOM 1")
 
+        # Test BOM 2 with OCR zero/O and spacing
+        ocr_bom2_variant = [
+            ([[0, 0], [10, 0], [10, 10], [0, 10]], "THONG TIN SAN PHAM (B0M 2)", 0.95),
+        ]
+        self.assertEqual(extractor.detect_bom_type(ocr_bom2_variant), "BOM 2")
+
+    def test_false_positive_rejection(self):
+        self.config.regex_pattern = r"[0-9A-Za-z]{6,15}-[0-9]{2}"
+        self.config.min_length = 8
+        self.config.max_length = 25
+        extractor = FilenameExtractor(self.config)
+
+        # False positives like 'Số mục: P03-02' -> 'SomuP03-02'
+        ocr_false_positives = [
+            ([[0, 0], [10, 0], [10, 10], [0, 10]], "Số mục: P03-02", 0.95),
+            ([[0, 10], [10, 10], [10, 20], [0, 20]], "SomuP03-02", 0.92),
+            ([[0, 20], [10, 20], [10, 30], [0, 30]], "Số trang: 01-02", 0.90),
+            ([[0, 30], [10, 30], [10, 40], [0, 40]], "Số lượng: 100-00", 0.88),
+        ]
+        candidates = extractor.extract_candidates(ocr_false_positives)
+        self.assertEqual(len(candidates), 0, "Non-code metadata like SomuP03-02 must be rejected.")
+
+    def test_drawing_code_priority_over_metadata(self):
+        self.config.regex_pattern = r"[0-9A-Za-z]{6,15}-[0-9]{2}"
+        self.config.min_length = 8
+        self.config.max_length = 25
+        extractor = FilenameExtractor(self.config)
+
+        # Real drawing code mixed with metadata headers
+        ocr_mixed = [
+            ([[0, 0], [10, 0], [10, 10], [0, 10]], "Số mục: P03-02", 0.98),
+            ([[0, 10], [10, 10], [10, 20], [0, 20]], "Số BV: 8052521XTIE00-01", 0.95),
+        ]
+        candidates = extractor.extract_candidates(ocr_mixed)
+        self.assertTrue(len(candidates) >= 1)
+        self.assertEqual(candidates[0].code, "8052521XTIE00-01")
+
 
 if __name__ == "__main__":
     unittest.main()
+
